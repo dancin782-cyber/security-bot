@@ -15,10 +15,7 @@ const client = new Client({
 });
 
 // ===== DATABASE======
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URI);
 
 // ===== CONFIG =====
 const owners = ["1137759529354940578"]; // replace with your ID
