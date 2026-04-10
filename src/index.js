@@ -14,10 +14,17 @@ const client = new Client({
   ]
 });
 
-// ===== DATABASE =====
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.log(err));
+// ===== DATABASE=======
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log("✅ MongoDB Connected");
+})
+.catch((err) => {
+  console.error("❌ MongoDB Error:", err);
+});
 
 // ===== CONFIG =====
 const owners = ["1137759529354940578"]; // replace with your ID
