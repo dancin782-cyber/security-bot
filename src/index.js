@@ -688,5 +688,37 @@ client.on("guildMemberRemove", async (member) => {
   }
 });
 
+const Whitelist = require('./models/Whitelist');
+
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isButton()) return;
+
+    const [action, feature, userId] = interaction.customId.split('_');
+
+    if (action !== "toggle") return;
+
+    let data = await Whitelist.findOne({ userId });
+
+    if (!data) {
+        data = await Whitelist.create({
+            userId,
+            features: {
+                mention: false,
+                link: false,
+                spam: false,
+                emoji: false
+            }
+        });
+    }
+
+    data.features[feature] = !data.features[feature];
+    await data.save();
+
+    await interaction.reply({
+        content: `✅ ${feature} is now **${data.features[feature] ? "ENABLED" : "DISABLED"}**`,
+        ephemeral: true
+    });
+});
+
 // ===== LOGIN =====
 client.login(process.env.TOKEN);
