@@ -105,6 +105,18 @@ client.on("interactionCreate", async (interaction) => {
 
   // ================= COMMANDS =================
 
+  // ✅ WHITELIST CHECK
+    if (message.content.includes('@everyone')) {
+
+        const Whitelist = require('./models/Whitelist');
+        const data = await Whitelist.findOne({ userId: message.author.id });
+
+        if (!data || !data.features.mention) {
+            await message.delete();
+            return message.channel.send("❌ Not whitelisted for mentions");
+        }
+    }
+
 // ================= ROLE GIVE =================
 if (message.content.startsWith("!rolegive")) {
   if (!isOwner) return message.reply("❌ You are not owner");
