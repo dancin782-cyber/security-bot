@@ -688,36 +688,36 @@ client.on("guildMemberRemove", async (member) => {
   }
 });
 
-const Whitelist = require('./models/Whitelist');
-
 client.on('interactionCreate', async interaction => {
     if (!interaction.isButton()) return;
 
+    const Whitelist = require('./models/Whitelist');
     const [action, feature, userId] = interaction.customId.split('_');
 
     if (action !== "toggle") return;
 
     let data = await Whitelist.findOne({ userId });
 
-    if (!data) {
-        data = await Whitelist.create({
-            userId,
-            features: {
-                mention: false,
-                link: false,
-                spam: false,
-                emoji: false
-            }
-        });
-    }
+    if (!data) return;
 
     data.features[feature] = !data.features[feature];
     await data.save();
 
-    await interaction.reply({
-        content: `✅ ${feature} is now **${data.features[feature] ? "ENABLED" : "DISABLED"}**`,
-        ephemeral: true
-    });
+    const f = data.features;
+
+    const embed = {
+        title: "⚙️ Advanced Whitelist Panel",
+        description:
+            `Managing: <@${userId}>\n\n` +
+            `Ban: ${f.ban ? "✅" : "❌"} | Kick: ${f.kick ? "✅" : "❌"} | Prune: ${f.prune ? "✅" : "❌"}\n` +
+            `Bot Add: ${f.botAdd ? "✅" : "❌"} | Server: ${f.serverUpdate ? "✅" : "❌"}\n` +
+            `Channel C/D/U: ${f.channelCreate?"✅":"❌"}/${f.channelDelete?"✅":"❌"}/${f.channelUpdate?"✅":"❌"}\n` +
+            `Role C/D/U: ${f.roleCreate?"✅":"❌"}/${f.roleDelete?"✅":"❌"}/${f.roleUpdate?"✅":"❌"}\n` +
+            `Webhook C/D/U: ${f.webhookCreate?"✅":"❌"}/${f.webhookDelete?"✅":"❌"}/${f.webhookUpdate?"✅":"❌"}\n` +
+            `Mention: ${f.mention?"✅":"❌"} | Emoji: ${f.emoji?"✅":"❌"} | Sticker: ${f.sticker?"✅":"❌"}`
+    };
+
+    await interaction.update({ embeds: [embed] });
 });
 
 // ===== LOGIN =====
