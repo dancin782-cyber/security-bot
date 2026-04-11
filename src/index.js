@@ -23,6 +23,7 @@ const whitelist = new Set();
 const spamMap = new Map();
 const joinMap = new Map();
 const banMap = new Map();
+const Whitelist = require('./models/Whitelist');
 const config = require('./config');
 const LOG_CHANNEL_ID = "1491837090965753977";
 const { REST, Routes } = require("discord.js");
@@ -827,6 +828,137 @@ client.on('roleDelete', async (role) => {
 
         try {
             await guild.members.ban(executor.id, { reason: "Unauthorized Role Delete" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('channelCreate', async (channel) => {
+    const guild = channel.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 10, limit: 1 });
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    // ✅ SAFETY
+    if (!executor) return;
+    if (executor.id === guild.ownerId) return;
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.channelCreate) {
+        try {
+            await channel.delete();
+            await guild.members.ban(executor.id, { reason: "Unauthorized Channel Create" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('roleCreate', async (role) => {
+    const guild = role.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 30, limit: 1 });
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    // ✅ SAFETY
+    if (!executor) return;
+    if (executor.id === guild.ownerId) return;
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.roleCreate) {
+        try {
+            await role.delete();
+            await guild.members.ban(executor.id, { reason: "Unauthorized Role Create" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('webhooksUpdate', async (channel) => {
+    const guild = channel.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 50, limit: 1 });
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    // ✅ SAFETY
+    if (!executor) return;
+    if (executor.id === guild.ownerId) return;
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.webhook) {
+        try {
+            const hooks = await channel.fetchWebhooks();
+            hooks.forEach(h => h.delete());
+
+            await guild.members.ban(executor.id, { reason: "Unauthorized Webhook" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('guildMemberAdd', async (member) => {
+
+    if (!member.user.bot) return;
+
+    const guild = member.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 28, limit: 1 });
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    // ✅ SAFETY
+    if (!executor) return;
+    if (executor.id === guild.ownerId) return;
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.botAdd) {
+        try {
+            await member.kick("Unauthorized Bot");
+            await guild.members.ban(executor.id, { reason: "Unauthorized Bot Add" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('guildUpdate', async (oldGuild, newGuild) => {
+
+    const guild = newGuild;
+
+    const logs = await guild.fetchAuditLogs({ type: 1, limit: 1 });
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    // ✅ SAFETY
+    if (!executor) return;
+    if (executor.id === guild.ownerId) return;
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.server) {
+        try {
+            await guild.setName(oldGuild.name);
+            await guild.members.ban(executor.id, { reason: "Unauthorized Server Update" });
         } catch (err) {}
     }
 });
