@@ -1,30 +1,54 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const Whitelist = require('../models/Whitelist');
 
 module.exports = {
-    name: 'whitelist',
+    name: "whitelist",
     async execute(message, args) {
 
         const user = message.mentions.users.first();
-        if (!user) return message.reply("Mention a user");
+        if (!user) return message.reply("❌ Mention a user");
 
         let data = await Whitelist.findOne({ userId: user.id });
 
         if (!data) {
-            data = new Whitelist({ userId: user.id });
-            await data.save();
+            data = await Whitelist.create({
+                userId: user.id,
+                features: {
+                    mention: false,
+                    link: false,
+                    spam: false,
+                    emoji: false
+                }
+            });
         }
 
         const embed = new EmbedBuilder()
-            .setTitle("Whitelist Panel")
-            .setDescription(`Manage whitelist for ${user}`)
-            .addFields(
-                { name: "Mention", value: data.features.mention ? "✅" : "❌", inline: true },
-                { name: "Webhook", value: data.features.webhook ? "✅" : "❌", inline: true },
-                { name: "Backup", value: data.features.backup ? "✅" : "❌", inline: true },
-                { name: "Security", value: data.features.security ? "✅" : "❌", inline: true }
-            );
+            .setTitle("⚙️ Whitelist Panel")
+            .setDescription(`Manage whitelist for <@${user.id}>`)
+            .setColor("Blue");
 
-        message.channel.send({ embeds: [embed] });
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`toggle_mention_${user.id}`)
+                .setLabel("Mention")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`toggle_link_${user.id}`)
+                .setLabel("Links")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`toggle_spam_${user.id}`)
+                .setLabel("Spam")
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`toggle_emoji_${user.id}`)
+                .setLabel("Emoji")
+                .setStyle(ButtonStyle.Primary)
+        );
+
+        message.channel.send({ embeds: [embed], components: [row] });
     }
 };
