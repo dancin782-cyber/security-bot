@@ -765,6 +765,21 @@ if (executor.id === guild.members.me.id) return;
     const data = await Whitelist.findOne({ userId: executor.id });
 
     if (!data || !data.features.kick) {
+      const logChannel = guild.channels.cache.get(config.logChannelId);
+
+if (logChannel) {
+    logChannel.send({
+        embeds: [{
+            title: "🚨 Security Alert",
+            description: `
+**User:** <@${executor.id}>
+**Action:** BAN
+**Status:** ❌ Blocked (Not Whitelisted)
+            `,
+            color: 0xff0000
+        }]
+    });
+}
 
         try {
             await guild.members.ban(executor.id, { reason: "Unauthorized Kick" });
