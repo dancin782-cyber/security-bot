@@ -720,5 +720,100 @@ client.on('interactionCreate', async interaction => {
     await interaction.update({ embeds: [embed] });
 });
 
+const Whitelist = require('./models/Whitelist');
+
+client.on('guildBanAdd', async (ban) => {
+    const guild = ban.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 22, limit: 1 }); // BAN
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    // ❗ Ignore bot itself
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.ban) {
+
+        try {
+            await guild.members.ban(executor.id, { reason: "Unauthorized Ban" });
+        } catch (err) {
+            console.log("Failed to punish:", err);
+        }
+    }
+});
+
+
+client.on('guildMemberRemove', async (member) => {
+    const guild = member.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 20, limit: 1 }); // KICK
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+  if (!executor) return;
+if (executor.id === guild.ownerId) return;
+if (executor.id === guild.members.me.id) return;
+
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.kick) {
+
+        try {
+            await guild.members.ban(executor.id, { reason: "Unauthorized Kick" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('channelDelete', async (channel) => {
+    const guild = channel.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 12, limit: 1 }); // CHANNEL DELETE
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.channelDelete) {
+
+        try {
+            await guild.members.ban(executor.id, { reason: "Unauthorized Channel Delete" });
+        } catch (err) {}
+    }
+});
+
+
+client.on('roleDelete', async (role) => {
+    const guild = role.guild;
+
+    const logs = await guild.fetchAuditLogs({ type: 32, limit: 1 }); // ROLE DELETE
+    const entry = logs.entries.first();
+    if (!entry) return;
+
+    const executor = entry.executor;
+
+    if (executor.id === guild.members.me.id) return;
+
+    const data = await Whitelist.findOne({ userId: executor.id });
+
+    if (!data || !data.features.roleDelete) {
+
+        try {
+            await guild.members.ban(executor.id, { reason: "Unauthorized Role Delete" });
+        } catch (err) {}
+    }
+});
+
 // ===== LOGIN =====
 client.login(process.env.TOKEN);
