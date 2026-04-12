@@ -110,7 +110,6 @@ client.on("interactionCreate", async (interaction) => {
   // ✅ WHITELIST CHECK
     if (message.content.includes('@everyone')) {
 
-        const Whitelist = require('./models/Whitelist');
         const data = await Whitelist.findOne({ userId: message.author.id });
 
         if (!data || !data.features.mention) {
@@ -693,7 +692,6 @@ client.on("guildMemberRemove", async (member) => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isButton()) return;
 
-    const Whitelist = require('./models/Whitelist');
     const [action, feature, userId] = interaction.customId.split('_');
 
     if (action !== "toggle") return;
@@ -721,8 +719,6 @@ client.on('interactionCreate', async interaction => {
 
     await interaction.update({ embeds: [embed] });
 });
-
-const Whitelist = require('./models/Whitelist');
 
 client.on('guildBanAdd', async (ban) => {
     const guild = ban.guild;
