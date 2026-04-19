@@ -489,7 +489,7 @@ client.on("channelDelete", async (channel) => {
     if (!executor) return;
 
     // ignore bot itself
-    if (executor.id === channel.client.user.id) return;
+    if (executor.id === client.user.id) return;
 
     const member = await channel.guild.members.fetch(executor.id);
 
